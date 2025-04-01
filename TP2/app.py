@@ -112,9 +112,9 @@ class GenerarNumerosAleatorios(QMainWindow):
                 self.data_display.append("\n... (mostrando solo los primeros 100 valores)")
 
     def create_histogram(self):
-        
         try:
-            # Obtener parámetros
+            
+            # Obtener el número de bins
             num_bins = int(self.bins_combo.currentText())
             data = self.generated_data
 
@@ -131,6 +131,7 @@ class GenerarNumerosAleatorios(QMainWindow):
                 align='mid',
                 color='#4682B4'
             )
+
             # Configuración del gráfico
             self.ax.set_title(
                 f'Histograma - {self.dist_combo.currentText()}\n(n={len(data):,}, bins={num_bins})',
@@ -146,12 +147,11 @@ class GenerarNumerosAleatorios(QMainWindow):
             self.figure.tight_layout()
 
             # Formatear etiquetas del eje X
-            bin_width = bin_edges[1] - bin_edges[0]
             self.ax.set_xticks(bin_edges)
             self.ax.xaxis.set_tick_params(rotation=45, labelsize=8)
 
             # Añadir etiquetas de frecuencia
-            for i, (freq, patch) in enumerate(zip(n, patches)):
+            for freq, patch in zip(n, patches):
                 if freq > 0:
                     x_center = patch.get_x() + patch.get_width() / 2
                     y_pos = freq + (0.02 * max_freq)
@@ -165,24 +165,24 @@ class GenerarNumerosAleatorios(QMainWindow):
                         rotation=90 if num_bins > 20 else 0
                     )
 
-            # Ordenar los bin_edges
-            bin_edges = np.sort(bin_edges)
+            bin_edges = np.unique(bin_edges)
+            if len(bin_edges) <= 1:
+                raise ValueError("No se pueden generar intervalos adecuados con los datos proporcionados.")
 
-            # Crear intervalos personalizados con pandas.IntervalIndex
-            interval_index = pd.IntervalIndex.from_breaks(bin_edges, closed='right')  
-            # Generar tabla de frecuencias manualmente sin que `pd.cut` ajuste los límites
+            # Crear la tabla de frecuencias
+            interval_index = pd.IntervalIndex.from_breaks(bin_edges, closed='right')
             freq_table = pd.Series(pd.cut(data, bins=interval_index)).value_counts().sort_index()
-            freq_table_str = "Intervalo\t\tFrecuencia\n" + "-" * 50 + "\n"
 
+            # Generar el string de la tabla
+            freq_table_str = "Intervalo\t\tFrecuencia\n" + "-" * 50 + "\n"
             for interval, count in freq_table.items():
-                left = interval.left 
-                right = interval.right
                 freq_table_str += f"[{interval.left:.4f} - {interval.right:.4f}]\t{count}\n"
 
-            # Actualizar visualización
+            # Mostrar la tabla de frecuencias en la interfaz
             self.data_display.setPlainText(freq_table_str)
-            self.figure.subplots_adjust(bottom=0.15) 
-            # Redibujar el canvas con los nuevos datos
+
+            # Ajuste de layout y redibujar el gráfico
+            self.figure.subplots_adjust(bottom=0.15)
             self.canvas.draw()
 
         except Exception as e:
