@@ -1,170 +1,87 @@
 import sys
+from PyQt5 import uic  # Importar uic
 import numpy as np
+import random 
 import pandas as pd
 import matplotlib.pyplot as plt
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                             QLabel, QComboBox, QLineEdit, QPushButton, QSpinBox,
-                             QTextEdit, QMessageBox, QGroupBox, QFormLayout)
-from PyQt5.QtCore import Qt
+from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+                            QLabel, QComboBox, QLineEdit, QPushButton, QSpinBox,
+                            QTextEdit, QMessageBox, QGroupBox, QFormLayout)
+from PyQt5.QtCore import Qt
 
-
-class RandomNumberGenerator(QMainWindow):
+class GenerarNumerosAleatorios(QMainWindow):
+    # Constructor
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Generador de Variables Aleatorias")
-        self.setGeometry(100, 100, 900, 700)
-
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-
-        self.main_layout = QHBoxLayout()
-        self.central_widget.setLayout(self.main_layout)
-
+        uic.loadUi("interfazR.ui", self)  # Carga el diseño desde el archivo .ui
         self.init_ui()
         self.generated_data = None
+                
+        # Para el histograma
+        self.figure = Figure(figsize=(6, 4), dpi=100)
+        self.ax = self.figure.add_subplot(111)
+        self.canvas = FigureCanvas(self.figure)
+
+        # Buscar el QWidget en tu archivo .ui donde se debe mostrar el gráfico
+        self.right_layout_widget = self.findChild(QWidget, "right_layout")
+        
+        # Asegurarse de que el layout de right_layout_widget esté vacío o adecuado
+        # Añadir el FigureCanvas (el gráfico) dentro del QWidget correspondiente
+        layout = QVBoxLayout(self.right_layout_widget)
+        layout.addWidget(self.canvas)
 
         self.update_parameters()
 
+    # Interacción con la interfaz
     def init_ui(self):
-        # Left panel - Input parameters
-        self.left_panel = QGroupBox("Parámetros de Entrada")
-        left_main_layout = QVBoxLayout()  # Layout principal vertical
-        self.left_layout = QFormLayout()   # Layout de formulario
-
-        # Distribution selection
-        self.dist_label = QLabel("Distribución:")
-        self.dist_combo = QComboBox()
-        self.dist_combo.addItems(["Uniforme [a, b]", "Exponencial", "Normal"])
+        # Conectar el cambio del combo box a la actualización de parámetros
         self.dist_combo.currentIndexChanged.connect(self.update_parameters)
-        self.left_layout.addRow(self.dist_label, self.dist_combo)
 
-        # Sample size
-        self.size_label = QLabel("Tamaño de muestra (≤1,000,000):")
-        self.size_input = QSpinBox()
-        self.size_input.setRange(1, 1000000)
-        self.size_input.setValue(1000)
-        self.left_layout.addRow(self.size_label, self.size_input)
-
-        # Parameters (will be updated based on distribution)
-        self.param1_label = QLabel("Parámetro a:")
-        self.param1_input = QLineEdit("0")
-        self.left_layout.addRow(self.param1_label, self.param1_input)
-
-        self.param2_label = QLabel("Parámetro b:")
-        self.param2_input = QLineEdit("1")
-        self.left_layout.addRow(self.param2_label, self.param2_input)
-
-        # Hide param2 initially (only shown for uniform distribution)
-        self.param2_label.hide()
-        self.param2_input.hide()
-
-        # Number of bins
-        self.bins_label = QLabel("Número de intervalos:")
-        self.bins_combo = QComboBox()
-        self.bins_combo.addItems(["10", "15", "20", "30"])
-        self.left_layout.addRow(self.bins_label, self.bins_combo)
-
-        # Generate button
-        self.generate_btn = QPushButton("Generar Datos")
+        # Botón generar
         self.generate_btn.clicked.connect(self.generate_data)
-        self.left_layout.addRow(self.generate_btn)
 
-        # Show data button
-        self.show_data_btn = QPushButton("Mostrar Datos")
+        # Botón mostrar Datos
         self.show_data_btn.clicked.connect(self.show_data)
-        self.left_layout.addRow(self.show_data_btn)
+        self.show_data_btn.setEnabled(False)
 
-        # Create histogram button
-        self.hist_btn = QPushButton("Crear Histograma")
+        # Botón Crear Histograma
         self.hist_btn.clicked.connect(self.create_histogram)
         self.hist_btn.setEnabled(False)
-        self.left_layout.addRow(self.hist_btn)
 
-        # Botón para cerrar el programa
-        close_btn = QPushButton("Cerrar Programa")
-        close_btn.clicked.connect(self.close)
-        close_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #dc3545;
-                color: white;
-                padding: 8px;
-                border-radius: 4px;
-                margin-top: 15px;
-            }
-            QPushButton:hover {
-                background-color: #c82333;
-            }
+        # Botón cerrar
+        self.close_btn.clicked.connect(self.close)
+        self.close_btn.setStyleSheet("""
+            QPushButton {background-color: #9b1c31; color: white; padding: 8px; border-radius: 4px; margin-top: 15px;}
+            QPushButton:hover {background-color: #7a1426;}
         """)
-
-        # Agregar elementos al layout principal
-        left_main_layout.addLayout(self.left_layout)
-        left_main_layout.addStretch(1)  # Espaciador para empujar el botón hacia abajo
-        left_main_layout.addWidget(close_btn)
-
-        self.left_panel.setLayout(left_main_layout)
-
-        # Right panel - Output
-        self.right_panel = QGroupBox("Resultados")
-        self.right_layout = QVBoxLayout()
-
-        # Figure for histogram
-        self.figure, self.ax = plt.subplots(figsize=(8, 6))
-        self.canvas = FigureCanvas(self.figure)
-        self.right_layout.addWidget(self.canvas)
-
-        # Data display
-        self.data_display = QTextEdit()
-        self.data_display.setReadOnly(True)
-        self.right_layout.addWidget(self.data_display)
-
-        self.right_panel.setLayout(self.right_layout)
-
-        # Add panels to main layout
-        self.main_layout.addWidget(self.left_panel, 1)
-        self.main_layout.addWidget(self.right_panel, 2)
-
-    def update_parameters(self):
-        dist = self.dist_combo.currentText()
-
-        if dist == "Uniforme [a, b]":
-            self.param1_label.setText("Parámetro a:")
-            self.param1_input.setText("0")
-            self.param2_label.setText("Parámetro b:")
-            self.param2_input.setText("1")
-            self.param2_label.show()
-            self.param2_input.show()
-        elif dist == "Exponencial":
-            self.param1_label.setText("Parámetro λ (lambda):")
-            self.param1_input.setText("1")
-            self.param2_label.hide()
-            self.param2_input.hide()
-        elif dist == "Normal":
-            self.param1_label.setText("Media (μ):")
-            self.param1_input.setText("0")
-            self.param2_label.setText("Desviación estándar (σ):")
-            self.param2_input.setText("1")
-            self.param2_label.show()
-            self.param2_input.show()
-
+    # Botón genearDatos
     def generate_data(self):
         try:
-            size = self.size_input.value()
+            # Tomar los valores de la Distribucion y tamaño de la muestra
             dist = self.dist_combo.currentText()
+            size = self.size_input.value()
 
+            # Generar Uniforme
             if dist == "Uniforme [a, b]":
                 a = float(self.param1_input.text())
                 b = float(self.param2_input.text())
                 if b <= a:
                     raise ValueError("b debe ser mayor que a")
-                self.generated_data = np.random.uniform(a, b, size)
+                #Generación uniforme corregida
+                random_list = [random.uniform(a, b) for _ in range(size)]
+                self.generated_data = np.array(random_list)
 
+
+            # Generar Exponencial
             elif dist == "Exponencial":
                 lambd = float(self.param1_input.text())
                 if lambd <= 0:
                     raise ValueError("λ debe ser mayor que 0")
                 self.generated_data = np.random.exponential(1 / lambd, size)
 
+            # Generar Normal
             elif dist == "Normal":
                 mu = float(self.param1_input.text())
                 sigma = float(self.param2_input.text())
@@ -172,32 +89,30 @@ class RandomNumberGenerator(QMainWindow):
                     raise ValueError("σ debe ser mayor que 0")
                 self.generated_data = np.random.normal(mu, sigma, size)
 
-            # Round to 4 decimal places
+            #Redondeamos valores a 4 decimales
             self.generated_data = np.round(self.generated_data, 4)
 
             QMessageBox.information(self, "Éxito", f"Datos generados correctamente (n={size})")
             self.hist_btn.setEnabled(True)
+            self.show_data_btn.setEnabled(True)
 
         except ValueError as e:
             QMessageBox.critical(self, "Error", f"Error en los parámetros: {str(e)}")
+            # Vaciamos datos e inhabilitamos los demas botones
             self.generated_data = None
             self.hist_btn.setEnabled(False)
-
+            self.show_data_btn.setEnabled(False)
+        
+    #Botón MostrarDatos
     def show_data(self):
-        if self.generated_data is not None:
-            # Show first 100 values to avoid freezing the GUI
-            display_data = self.generated_data[:100]
-            self.data_display.setPlainText("\n".join(map(str, display_data)))
-            if len(self.generated_data) > 100:
+        # Show first 100 values to avoid freezing the GUI
+        display_data = self.generated_data[:100]
+        self.data_display.setPlainText("\n".join(map(str, display_data)))
+        if len(self.generated_data) > 100:
                 self.data_display.append("\n... (mostrando solo los primeros 100 valores)")
-        else:
-            QMessageBox.warning(self, "Advertencia", "No hay datos generados. Genere datos primero.")
 
     def create_histogram(self):
-        if self.generated_data is None:
-            QMessageBox.warning(self, "Advertencia", "No hay datos generados. Genere datos primero.")
-            return
-
+        
         try:
             # Obtener parámetros
             num_bins = int(self.bins_combo.currentText())
@@ -206,16 +121,16 @@ class RandomNumberGenerator(QMainWindow):
             # Limpiar gráfico anterior
             self.ax.clear()
 
-            # Crear histograma con bins automáticos pero consistentes
+            # Crear histograma
             n, bin_edges, patches = self.ax.hist(
                 data,
                 bins=num_bins,
                 edgecolor='black',
                 alpha=0.7,
                 density=False,
-                align='mid'
+                align='mid',
+                color='#4682B4'
             )
-
             # Configuración del gráfico
             self.ax.set_title(
                 f'Histograma - {self.dist_combo.currentText()}\n(n={len(data):,}, bins={num_bins})',
@@ -235,7 +150,7 @@ class RandomNumberGenerator(QMainWindow):
             self.ax.set_xticks(bin_edges)
             self.ax.xaxis.set_tick_params(rotation=45, labelsize=8)
 
-            # Añadir etiquetas de frecuencia solo si hay espacio
+            # Añadir etiquetas de frecuencia
             for i, (freq, patch) in enumerate(zip(n, patches)):
                 if freq > 0:
                     x_center = patch.get_x() + patch.get_width() / 2
@@ -250,23 +165,56 @@ class RandomNumberGenerator(QMainWindow):
                         rotation=90 if num_bins > 20 else 0
                     )
 
-            # Generar tabla de frecuencias optimizada
-            freq_table = pd.cut(data, bins=bin_edges, include_lowest=True).value_counts().sort_index()
+            # Redondear y asegurar que el primer bin empieza en 0
+            bin_edges[0] = 0
+            # Crear intervalos personalizados con pandas.IntervalIndex
+            interval_index = pd.IntervalIndex.from_breaks(bin_edges, closed='right')  
+            # Generar tabla de frecuencias manualmente sin que `pd.cut` ajuste los límites
+            freq_table = pd.Series(pd.cut(data, bins=interval_index)).value_counts().sort_index()
             freq_table_str = "Intervalo\t\tFrecuencia\n" + "-" * 50 + "\n"
 
             for interval, count in freq_table.items():
+                left = interval.left 
+                right = interval.right
                 freq_table_str += f"[{interval.left:.4f} - {interval.right:.4f}]\t{count}\n"
 
             # Actualizar visualización
             self.data_display.setPlainText(freq_table_str)
+            self.figure.subplots_adjust(bottom=0.15) 
+            # Redibujar el canvas con los nuevos datos
             self.canvas.draw()
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error crítico:\n{str(e)}")
+    
+    # Para actualizar los parametros en tiempo de ejecución
+    def update_parameters(self):
+        # Se lee la distribucion elejida
+        dist = self.dist_combo.currentText()
 
+        if dist == "Uniforme [a, b]":
+            self.param1_label.setText("Parámetro a:")
+            self.param1_input.setText("0")
+            self.param2_label.setText("Parámetro b:")
+            self.param2_input.setText("1")
 
+        elif dist == "Exponencial":
+            self.param1_label.setText("Parámetro λ (lambda):")
+            self.param1_input.setText("1")
+            self.param2_label.hide()
+            self.param2_input.hide()
+
+        elif dist == "Normal":
+            self.param1_label.setText("Media (μ):")
+            self.param1_input.setText("0")
+            self.param2_label.setText("Desviación estándar (σ):")
+            self.param2_input.setText("1")
+            self.param2_label.show()
+            self.param2_input.show()
+
+# Función principal
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = RandomNumberGenerator()
+    window = GenerarNumerosAleatorios()  
     window.show()
     sys.exit(app.exec_())
