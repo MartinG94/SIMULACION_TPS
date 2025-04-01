@@ -165,8 +165,9 @@ class GenerarNumerosAleatorios(QMainWindow):
                         rotation=90 if num_bins > 20 else 0
                     )
 
-            # Redondear y asegurar que el primer bin empieza en 0
-            bin_edges[0] = 0
+            # Ordenar los bin_edges
+            bin_edges = np.sort(bin_edges)
+
             # Crear intervalos personalizados con pandas.IntervalIndex
             interval_index = pd.IntervalIndex.from_breaks(bin_edges, closed='right')  
             # Generar tabla de frecuencias manualmente sin que `pd.cut` ajuste los límites
