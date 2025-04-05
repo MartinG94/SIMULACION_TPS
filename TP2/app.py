@@ -1,34 +1,35 @@
 import sys
 from PyQt5 import uic  # Importar uic
 import numpy as np
-import random 
+import random
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                            QLabel, QComboBox, QLineEdit, QPushButton, QSpinBox,
-                            QTextEdit, QMessageBox, QGroupBox, QFormLayout)
+                             QLabel, QComboBox, QLineEdit, QPushButton, QSpinBox,
+                             QTextEdit, QMessageBox, QGroupBox, QFormLayout)
 from PyQt5.QtCore import Qt
+
+from TP2.generadorNumeros import *
 
 class GenerarNumerosAleatorios(QMainWindow):
     # Constructor
     def __init__(self):
         super().__init__()
-        uic.loadUi("interfazR.ui", self)  # Carga el diseño desde el archivo .ui
+        uic.loadUi("interfazR.ui", self)
         self.init_ui()
         self.generated_data = None
-                
+
         # Para el histograma
         self.figure = Figure(figsize=(6, 4), dpi=100)
         self.ax = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self.figure)
 
-        # Buscar el QWidget en tu archivo .ui donde se debe mostrar el gráfico
+        # Buscar el QWidget en el archivo .ui donde se debe mostrar el gráfico
         self.right_layout_widget = self.findChild(QWidget, "right_layout")
-        
-        # Asegurarse de que el layout de right_layout_widget esté vacío o adecuado
-        # Añadir el FigureCanvas (el gráfico) dentro del QWidget correspondiente
+
+        # Añade el FigureCanvas (el gráfico) dentro del QWidget correspondiente
         layout = QVBoxLayout(self.right_layout_widget)
         layout.addWidget(self.canvas)
 
@@ -36,7 +37,7 @@ class GenerarNumerosAleatorios(QMainWindow):
 
     # Interacción con la interfaz
     def init_ui(self):
-        # Conectar el cambio del combo box a la actualización de parámetros
+        # Conecta el cambio del combo box a la actualización de parámetros
         self.dist_combo.currentIndexChanged.connect(self.update_parameters)
 
         # Botón generar
@@ -56,6 +57,7 @@ class GenerarNumerosAleatorios(QMainWindow):
             QPushButton {background-color: #9b1c31; color: white; padding: 8px; border-radius: 4px; margin-top: 15px;}
             QPushButton:hover {background-color: #7a1426;}
         """)
+
     # Botón genearDatos
     def generate_data(self):
         try:
@@ -69,17 +71,16 @@ class GenerarNumerosAleatorios(QMainWindow):
                 b = float(self.param2_input.text())
                 if b <= a:
                     raise ValueError("b debe ser mayor que a")
-                #Generación uniforme corregida
-                random_list = [random.uniform(a, b) for _ in range(size)]
+                random_list = [generar_uniforme(a, b) for _ in range(size)]
                 self.generated_data = np.array(random_list)
-
 
             # Generar Exponencial
             elif dist == "Exponencial":
                 lambd = float(self.param1_input.text())
                 if lambd <= 0:
                     raise ValueError("λ debe ser mayor que 0")
-                self.generated_data = np.random.exponential(1 / lambd, size)
+                random_list = [generar_exponencial(lambd) for _ in range(size)]
+                self.generated_data = np.array(random_list)
 
             # Generar Normal
             elif dist == "Normal":
@@ -87,10 +88,16 @@ class GenerarNumerosAleatorios(QMainWindow):
                 sigma = float(self.param2_input.text())
                 if sigma <= 0:
                     raise ValueError("σ debe ser mayor que 0")
-                self.generated_data = np.random.normal(mu, sigma, size)
 
-            #Redondeamos valores a 4 decimales
-            self.generated_data = np.round(self.generated_data, 4)
+                # Como generamos dos números por iteración, necesitamos ajustar el tamaño
+                random_list = []
+                iterations = (size + 1) // 2  # Redondeando hacia arriba
+                for _ in range(iterations):
+                    z1, z2 = generar_normal_bm(mu, sigma)
+                    random_list.append(z1)
+                    if len(random_list) < size:  # Asegura no exceder el tamaño solicitado
+                        random_list.append(z2)
+                self.generated_data = np.array(random_list[:size])  # Asegura el tamaño exacto
 
             QMessageBox.information(self, "Éxito", f"Datos generados correctamente (n={size})")
             self.hist_btn.setEnabled(True)
@@ -102,18 +109,18 @@ class GenerarNumerosAleatorios(QMainWindow):
             self.generated_data = None
             self.hist_btn.setEnabled(False)
             self.show_data_btn.setEnabled(False)
-        
-    #Botón MostrarDatos
+
+    # Botón MostrarDatos
     def show_data(self):
-        # Show first 100 values to avoid freezing the GUI
+        # Mostramos los primeros 100 para que no se trabe el GUI
         display_data = self.generated_data[:100]
         self.data_display.setPlainText("\n".join(map(str, display_data)))
         if len(self.generated_data) > 100:
-                self.data_display.append("\n... (mostrando solo los primeros 100 valores)")
+            self.data_display.append("\n... (mostrando solo los primeros 100 valores)")
 
     def create_histogram(self):
         try:
-            
+
             # Obtener el número de bins
             num_bins = int(self.bins_combo.currentText())
             data = self.generated_data
@@ -187,7 +194,7 @@ class GenerarNumerosAleatorios(QMainWindow):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error crítico:\n{str(e)}")
-    
+
     # Para actualizar los parametros en tiempo de ejecución
     def update_parameters(self):
         # Se lee la distribucion elejida
@@ -198,6 +205,8 @@ class GenerarNumerosAleatorios(QMainWindow):
             self.param1_input.setText("0")
             self.param2_label.setText("Parámetro b:")
             self.param2_input.setText("1")
+            self.param2_label.show()
+            self.param2_input.show()
 
         elif dist == "Exponencial":
             self.param1_label.setText("Parámetro λ (lambda):")
@@ -213,9 +222,10 @@ class GenerarNumerosAleatorios(QMainWindow):
             self.param2_label.show()
             self.param2_input.show()
 
+
 # Función principal
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = GenerarNumerosAleatorios()  
+    window = GenerarNumerosAleatorios()
     window.show()
     sys.exit(app.exec_())
