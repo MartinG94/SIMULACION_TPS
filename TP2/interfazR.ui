@@ -2,290 +2,209 @@
 <ui version="4.0">
  <class>main</class>
  <widget class="QMainWindow" name="main">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>1283</width>
-    <height>769</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Generador de Variables Aleatorias</string>
   </property>
-  <property name="autoFillBackground">
-   <bool>false</bool>
-  </property>
-  <property name="toolButtonStyle">
-   <enum>Qt::ToolButtonIconOnly</enum>
-  </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QGroupBox" name="left_panel">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>401</width>
-      <height>731</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Parámetros de Entrada</string>
-    </property>
-    <widget class="QPushButton" name="hist_btn">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>310</y>
-       <width>361</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Crear Histograma</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="generate_btn">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>230</y>
-       <width>361</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Generar Datos</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="show_data_btn">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>270</y>
-       <width>361</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Mostrar Datos</string>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="dist_combo">
-     <property name="geometry">
-      <rect>
-       <x>240</x>
-       <y>30</y>
-       <width>141</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <item>
-      <property name="text">
-       <string>Uniforme [a, b]</string>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <!-- Panel izquierdo: Parámetros de Entrada -->
+    <item>
+     <widget class="QGroupBox" name="left_panel">
+      <property name="title">
+       <string>Parámetros de Entrada</string>
       </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Normal</string>
+      <layout class="QVBoxLayout" name="verticalLayout_left">
+       <!-- Formulario con los parámetros -->
+       <item>
+        <layout class="QFormLayout" name="formLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="dist_label">
+           <property name="text">
+            <string>Distribución:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="dist_combo">
+           <item>
+            <property name="text">
+             <string>Uniforme [a, b]</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Normal</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Exponencial</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="size_label">
+           <property name="text">
+            <string>Tamaño de muestra (&lt;= 1.000.000):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="size_input">
+           <property name="minimum">
+            <number>1000</number>
+           </property>
+           <property name="maximum">
+            <number>1000000</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="param1_label">
+           <property name="text">
+            <string>Parámetro a:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="param1_input">
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="param2_label">
+           <property name="text">
+            <string>Parámetro b:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="param2_input">
+           <property name="text">
+            <string>1</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="bins_label">
+           <property name="text">
+            <string>Número de intervalos:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QComboBox" name="bins_combo">
+           <item>
+            <property name="text">
+             <string>10</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>15</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>20</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>30</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <!-- Layout para los botones justo debajo del formulario -->
+       <item>
+        <layout class="QVBoxLayout" name="buttonLayout">
+         <item>
+          <widget class="QPushButton" name="generate_btn">
+           <property name="text">
+            <string>Generar Datos</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="show_data_btn">
+           <property name="text">
+            <string>Mostrar Datos</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="hist_btn">
+           <property name="text">
+            <string>Crear Histograma</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <!-- Spacer para empujar el botón de cerrar hacia el fondo -->
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <!-- Botón Cerrar Programa -->
+       <item>
+        <widget class="QPushButton" name="close_btn">
+         <property name="text">
+          <string>Cerrar Programa</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <!-- Panel derecho: Resultados -->
+    <item>
+     <widget class="QGroupBox" name="right_panel">
+      <property name="title">
+       <string>Resultados</string>
       </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Exponencial</string>
-      </property>
-     </item>
-    </widget>
-    <widget class="QSpinBox" name="size_input">
-     <property name="geometry">
-      <rect>
-       <x>240</x>
-       <y>60</y>
-       <width>141</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>141</width>
-       <height>21</height>
-      </size>
-     </property>
-     <property name="minimum">
-      <number>1000</number>
-     </property>
-     <property name="maximum">
-      <number>1000000</number>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="param1_input">
-     <property name="geometry">
-      <rect>
-       <x>240</x>
-       <y>90</y>
-       <width>141</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>0</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="param2_input">
-     <property name="geometry">
-      <rect>
-       <x>240</x>
-       <y>120</y>
-       <width>141</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>1</string>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="bins_combo">
-     <property name="geometry">
-      <rect>
-       <x>240</x>
-       <y>150</y>
-       <width>141</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <item>
-      <property name="text">
-       <string>10</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>15</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>20</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>30</string>
-      </property>
-     </item>
-    </widget>
-    <widget class="QPushButton" name="close_btn">
-     <property name="geometry">
-      <rect>
-       <x>70</x>
-       <y>640</y>
-       <width>271</width>
-       <height>51</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Cerrar Programa</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="dist_label">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>30</y>
-       <width>81</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Distribución:</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="size_label">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>50</y>
-       <width>221</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Tamaño de muestra (&lt;= 1.000.000):</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="param1_label">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>90</y>
-       <width>211</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Parámetro a:</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="param2_label">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>120</y>
-       <width>211</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Parámetro b:</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="bins_label">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>150</y>
-       <width>211</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Número de intervalos:</string>
-     </property>
-    </widget>
-   </widget>
-   <widget class="QGroupBox" name="right_panel">
-    <property name="geometry">
-     <rect>
-      <x>420</x>
-      <y>10</y>
-      <width>851</width>
-      <height>731</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Resultados</string>
-    </property>
-    <widget class="QGraphicsView" name="right_layout">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>30</y>
-       <width>831</width>
-       <height>511</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QTextEdit" name="data_display">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>550</y>
-       <width>831</width>
-       <height>161</height>
-      </rect>
-     </property>
-    </widget>
-   </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_right">
+       <!-- Histograma (QGraphicsView): ocupa el 70% del panel derecho -->
+       <item stretch="7">
+        <widget class="QGraphicsView" name="right_layout">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <!-- Datos (QTextEdit): ocupa el 30% del panel derecho -->
+       <item stretch="3">
+        <widget class="QTextEdit" name="data_display">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>

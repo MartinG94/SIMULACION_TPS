@@ -21,6 +21,9 @@ class GenerarNumerosAleatorios(QMainWindow):
         self.init_ui()
         self.generated_data = None
 
+        self.centralwidget.layout().setStretch(0, 3)  # left_panel: 30%
+        self.centralwidget.layout().setStretch(1, 7)  # right_panel: 70%
+
         # Para el histograma
         self.figure = Figure(figsize=(6, 4), dpi=100)
         self.ax = self.figure.add_subplot(111)
