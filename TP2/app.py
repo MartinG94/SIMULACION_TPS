@@ -95,7 +95,7 @@ class GenerarNumerosAleatorios(QMainWindow):
             self.generated_data = None
             return  # Se interrumpe la simulación si hay error
 
-        # 2. Mostrar datos
+        # 2. Mostrar datos (se muestran solo los primeros 100 valores)
         try:
             display_data = self.generated_data[:100]
             self.data_display.setPlainText("\n".join(map(str, display_data)))
@@ -105,15 +105,23 @@ class GenerarNumerosAleatorios(QMainWindow):
             QMessageBox.critical(self, "Error", f"Error al mostrar los datos:\n{str(e)}")
             return
 
-        # 3. Crear histograma
+        # 3. Crear histograma y tabla de frecuencias utilizando los mismos intervalos
         try:
             num_bins = int(self.bins_combo.currentText())
             data = self.generated_data
+
+            # Calcular el valor mínimo y máximo para determinar los intervalos
+            data_min = data.min()
+            data_max = data.max()
+            # Crear bin_edges de forma uniforme
+            bin_edges = np.linspace(data_min, data_max, num_bins + 1)
+
             self.ax.clear()  # Limpiar gráfico anterior
 
-            n, bin_edges, patches = self.ax.hist(
+            # Generar histograma usando los intervalos calculados
+            n, _, patches = self.ax.hist(
                 data,
-                bins=num_bins,
+                bins=bin_edges,
                 edgecolor='black',
                 alpha=0.7,
                 density=False,
@@ -149,18 +157,19 @@ class GenerarNumerosAleatorios(QMainWindow):
                         rotation=90 if num_bins > 20 else 0
                     )
 
-            bin_edges = np.unique(bin_edges)
-            if len(bin_edges) <= 1:
-                raise ValueError("No se pueden generar intervalos adecuados con los datos proporcionados.")
-
-            # Crear tabla de frecuencias
-            interval_index = pd.IntervalIndex.from_breaks(bin_edges, closed='right')
-            freq_table = pd.Series(pd.cut(data, bins=interval_index)).value_counts().sort_index()
-
+            # Crear tabla de frecuencias con los mismos intervalos
             freq_table_str = "Intervalo\t\tFrecuencia\n" + "-" * 50 + "\n"
-            for interval, count in freq_table.items():
-                freq_table_str += f"[{interval.left:.4f} - {interval.right:.4f}]\t{count}\n"
+            for i in range(len(n)):
+                left = bin_edges[i]
+                right = bin_edges[i + 1]
+                # La convención aquí es: [left, right) para todos, salvo que se decida incluir el último punto
+                interval_str = f"[{left:.4f}, {right:.4f})"
+                # Para el último intervalo, si se desea incluir el máximo, se puede ajustar:
+                if i == len(n) - 1:
+                    interval_str = f"[{left:.4f}, {right:.4f}]"
+                freq_table_str += f"{interval_str}\t{int(n[i])}\n"
 
+            # Mostrar la tabla de frecuencias en la misma zona de datos
             self.data_display.setPlainText(freq_table_str)
             self.figure.subplots_adjust(bottom=0.15)
             self.canvas.draw()
