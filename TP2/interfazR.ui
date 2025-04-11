@@ -122,31 +122,33 @@
         </layout>
        </item>
        <!-- Layout para los botones justo debajo del formulario -->
+       <!-- Layout para los botones justo debajo del formulario -->
        <item>
         <layout class="QVBoxLayout" name="buttonLayout">
          <item>
-          <widget class="QPushButton" name="generate_btn">
-           <property name="text">
-            <string>Generar Datos</string>
-           </property>
-          </widget>
+           <widget class="QPushButton" name="sim_btn">
+             <property name="text">
+              <string>Ejecutar Simulación</string>
+             </property>
+             <property name="styleSheet">
+               <string>
+                 QPushButton {
+                   background-color: #28a745;
+                   color: white;
+                   padding: 8px;
+                   border-radius: 4px;
+                   margin-top: 15px;
+                 }
+                 QPushButton:hover {
+                   background-color: #218838;
+                 }
+               </string>
+             </property>
+           </widget>
          </item>
-         <item>
-          <widget class="QPushButton" name="show_data_btn">
-           <property name="text">
-            <string>Mostrar Datos</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="hist_btn">
-           <property name="text">
-            <string>Crear Histograma</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
+       </layout>
+     </item>
+
        <!-- Spacer para empujar el botón de cerrar hacia el fondo -->
        <item>
         <spacer name="verticalSpacer">
