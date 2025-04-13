@@ -58,18 +58,25 @@ class GenerarNumerosAleatorios(QMainWindow):
             dist = self.dist_combo.currentText()
             size = self.size_input.value()
 
+            if size <= 0:
+                raise ValueError("El tamaño de la muestra debe ser mayor que 0.")
+
             if dist == "Uniforme [a, b]":
                 a = float(self.param1_input.text())
                 b = float(self.param2_input.text())
                 if b <= a:
-                    raise ValueError("b debe ser mayor que a")
+                    raise ValueError("El parámetro 'b' debe ser mayor que 'a'.")
+                if size < 2:  # Grados de libertad mínimos para uniforme
+                    raise ValueError("El tamaño de la muestra debe ser al menos 2 para la distribución uniforme.")
                 random_list = [generar_uniforme(a, b) for _ in range(size)]
                 self.generated_data = np.array(random_list)
 
             elif dist == "Exponencial":
                 lambd = float(self.param1_input.text())
                 if lambd <= 0:
-                    raise ValueError("λ debe ser mayor que 0")
+                    raise ValueError("El parámetro 'λ' debe ser mayor que 0.")
+                if size < 1:  # Grados de libertad mínimos para exponencial
+                    raise ValueError("El tamaño de la muestra debe ser al menos 1 para la distribución exponencial.")
                 random_list = [generar_exponencial(lambd) for _ in range(size)]
                 self.generated_data = np.array(random_list)
 
@@ -77,7 +84,9 @@ class GenerarNumerosAleatorios(QMainWindow):
                 mu = float(self.param1_input.text())
                 sigma = float(self.param2_input.text())
                 if sigma <= 0:
-                    raise ValueError("σ debe ser mayor que 0")
+                    raise ValueError("El parámetro 'σ' debe ser mayor que 0.")
+                if size < 2:  # Grados de libertad mínimos para normal
+                    raise ValueError("El tamaño de la muestra debe ser al menos 2 para la distribución normal.")
                 random_list = []
                 iterations = (size + 1) // 2  # Redondeo hacia arriba
                 for _ in range(iterations):
@@ -129,6 +138,11 @@ class GenerarNumerosAleatorios(QMainWindow):
                 color='#4682B4'
             )
 
+            # Configurar etiquetas del eje X
+            self.ax.set_xticks(bin_edges)
+            self.ax.set_xticklabels([f"{edge:.4f}" for edge in bin_edges], fontsize=8, rotation=45)
+
+            # Configurar título y etiquetas de los ejes
             self.ax.set_title(
                 f'Histograma - {self.dist_combo.currentText()}\n(n={len(data):,}, bins={num_bins})',
                 fontsize=10, pad=12
@@ -136,11 +150,10 @@ class GenerarNumerosAleatorios(QMainWindow):
             self.ax.set_xlabel('Valores', fontsize=9)
             self.ax.set_ylabel('Frecuencia', fontsize=9)
             self.ax.grid(True, alpha=0.3)
+
+            # Ajustar límites del eje Y
             max_freq = max(n) if len(n) > 0 else 1
             self.ax.set_ylim(0, max_freq * 1.2)
-            self.figure.tight_layout()
-            self.ax.set_xticks(bin_edges)
-            self.ax.xaxis.set_tick_params(rotation=45, labelsize=8)
 
             # Etiquetas de frecuencia en cada barra
             for freq, patch in zip(n, patches):
