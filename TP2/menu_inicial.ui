@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>360</width>
+    <height>271</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,14 +17,11 @@
    <widget class="QPushButton" name="btn_abrir_tp">
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>40</x>
       <y>30</y>
       <width>280</width>
       <height>40</height>
      </rect>
-    </property>
-    <property name="text">
-     <string>TRABAJO PRÁCTICO N°1</string>
     </property>
     <property name="styleSheet">
      <string>
@@ -39,18 +36,18 @@
       }
      </string>
     </property>
+    <property name="text">
+     <string>TRABAJO PRÁCTICO N°2</string>
+    </property>
    </widget>
    <widget class="QPushButton" name="exit_btn">
     <property name="geometry">
      <rect>
-      <x>250</x>
-      <y>490</y>
+      <x>40</x>
+      <y>170</y>
       <width>280</width>
       <height>40</height>
      </rect>
-    </property>
-    <property name="text">
-     <string>Salir</string>
     </property>
     <property name="styleSheet">
      <string>
@@ -65,6 +62,35 @@
       }
      </string>
     </property>
+    <property name="text">
+     <string>Salir</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_abrir_tp_2">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>100</y>
+      <width>280</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string>
+      QPushButton {
+          background-color: blue;
+          color: white;
+          border-radius: 5px;
+          padding: 6px;
+      }
+      QPushButton:hover {
+          background-color: green;
+      }
+     </string>
+    </property>
+    <property name="text">
+     <string>TRABAJO PRÁCTICO N°3</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -72,7 +98,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>360</width>
      <height>21</height>
     </rect>
    </property>

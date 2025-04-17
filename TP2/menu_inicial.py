@@ -10,16 +10,20 @@ class MenuInicial(QtWidgets.QMainWindow):
 
         # Botones
         self.btn_abrir_tp = self.findChild(QtWidgets.QPushButton, "btn_abrir_tp")
+        self.btn_abrir_tp_2 = self.findChild(QtWidgets.QPushButton, "btn_abrir_tp_2")
         self.exit_btn = self.findChild(QtWidgets.QPushButton, "exit_btn")
 
         # Verificar que los botones existan
         if self.btn_abrir_tp is None:
             raise AttributeError("No se encontró un botón con el nombre 'btn_abrir_tp' en el archivo menu_inicial.ui.")
+        if self.btn_abrir_tp_2 is None:
+            raise AttributeError("No se encontró un botón con el nombre 'btn_abrir_tp_2' en el archivo menu_inicial.ui.")
         if self.exit_btn is None:
             raise AttributeError("No se encontró un botón con el nombre 'exit_btn' en el archivo menu_inicial.ui.")
 
         # Conectar eventos
         self.btn_abrir_tp.clicked.connect(self.abrir_tp)
+        self.btn_abrir_tp_2.clicked.connect(self.abrir_tp_2)
         self.exit_btn.clicked.connect(self.salir)
 
     def abrir_tp(self):
@@ -28,12 +32,18 @@ class MenuInicial(QtWidgets.QMainWindow):
         subprocess.Popen(["python", "app.py"]).wait()  # Espera a que app.py termine
         self.show()  # Reabre el menú inicial después de cerrar app.py
 
+    def abrir_tp_2(self):
+        # Ejecuta tp3.py y cierra la ventana actual
+        self.close()
+        subprocess.Popen(["python", "tp3.py"]).wait()  # Espera a que tp3.py termine
+        self.show()  # Reabre el menú inicial después de cerrar tp3.py
+
     def salir(self):
         # Cierra la ventana y termina la aplicación
         QtWidgets.QApplication.quit()
 
 if __name__ == "__main__":
-    while True:  # Bucle para reiniciar el menú inicial después de cerrar app.py
+    while True:  # Bucle para reiniciar el menú inicial después de cerrar app.py o tp3.py
         app = QtWidgets.QApplication(sys.argv)
         ventana = MenuInicial()
         ventana.show()
