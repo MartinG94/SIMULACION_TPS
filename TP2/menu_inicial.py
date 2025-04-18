@@ -31,12 +31,16 @@ class MenuInicial(QtWidgets.QMainWindow):
         self.close()
         subprocess.Popen(["python", "app.py"]).wait()  # Espera a que app.py termine
         self.show()  # Reabre el menú inicial después de cerrar app.py
+        self.raise_()  # Coloca la ventana al frente
+        self.activateWindow()  # Activa la ventana
 
     def abrir_tp_2(self):
         # Ejecuta tp3.py y cierra la ventana actual
         self.close()
         subprocess.Popen(["python", "tp3.py"]).wait()  # Espera a que tp3.py termine
         self.show()  # Reabre el menú inicial después de cerrar tp3.py
+        self.raise_()  # Coloca la ventana al frente
+        self.activateWindow()  # Activa la ventana
 
     def salir(self):
         # Cierra la ventana y termina la aplicación
