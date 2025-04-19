@@ -1,4 +1,8 @@
+import sys
 import tkinter as tk
+import pandas as pd
+import openpyxl
+from tkinter import filedialog
 from tkinter import ttk
 import random
 
@@ -69,14 +73,16 @@ class BowlingSimulatorApp:
 
         # Botones
         ttk.Button(self.root, text="Iniciar Simulación", command=self.run_simulation).grid(row=1, column=0, pady=10)
-        ttk.Button(self.root, text="Salir", command=self.root.destroy).grid(row=2, column=0, pady=10)
+        ttk.Button(self.root, text="Exportar a Excel", command=self.export_to_excel).grid(row=2, column=0, pady=10)
+        ttk.Button(self.root, text="Salir", command=self.root.destroy).grid(row=3, column=0, pady=10)
 
         # Sección de resultados
         self.result_frame = ttk.LabelFrame(self.root, text="Resultados")
         self.result_frame.grid(row=0, column=1, rowspan=3, padx=10, pady=10, sticky="nsew")
 
         # Agregar columna "N°" al inicio
-        self.tree = ttk.Treeview(self.result_frame, columns=("Col0", "Col1", "Col2", "Col3", "Col4"), show="headings")
+        self.tree = ttk.Treeview(self.result_frame, columns=("Col0", "Col1", "Col2", "Col3", "Col4"), show="headings",
+                                 selectmode="browse")
         self.tree.heading("Col0", text="N°")  # Nueva columna para numeración
         self.tree.heading("Col1", text="Iteración")
         self.tree.heading("Col2", text="Puntaje Total")
@@ -89,6 +95,20 @@ class BowlingSimulatorApp:
         style.configure("Treeview", rowheight=25)
         style.map("Treeview", background=[("selected", "blue")], foreground=[("selected", "white")])
         self.tree.tag_configure("below_target", background="red", foreground="white")
+
+    def export_to_excel(self):
+        # Obtener todos los datos de la grilla
+        rows = []
+        for item in self.tree.get_children():
+            rows.append(self.tree.item(item)["values"])
+
+        # Crear un DataFrame con los datos
+        df = pd.DataFrame(rows, columns=["N°", "Iteración", "Puntaje Total", "Pinos Tirados", "Probabilidad"])
+
+        # Guardar el archivo Excel
+        file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
+        if file_path:
+            df.to_excel(file_path, index=False, engine='openpyxl')
 
     def run_simulation(self):
         # Limpiar resultados previos
