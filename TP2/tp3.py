@@ -75,8 +75,9 @@ class BowlingSimulatorApp:
         self.result_frame = ttk.LabelFrame(self.root, text="Resultados")
         self.result_frame.grid(row=0, column=1, rowspan=3, padx=10, pady=10, sticky="nsew")
 
+        # Cambiar encabezado de la columna "Ronda" a "Iteración"
         self.tree = ttk.Treeview(self.result_frame, columns=("Col1", "Col2", "Col3", "Col4"), show="headings")
-        self.tree.heading("Col1", text="Ronda")
+        self.tree.heading("Col1", text="Iteración")  # Cambiado de "Ronda" a "Iteración"
         self.tree.heading("Col2", text="Puntaje Total")
         self.tree.heading("Col3", text="Pinos Tirados")
         self.tree.heading("Col4", text="Probabilidad")
