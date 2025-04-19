@@ -75,9 +75,10 @@ class BowlingSimulatorApp:
         self.result_frame = ttk.LabelFrame(self.root, text="Resultados")
         self.result_frame.grid(row=0, column=1, rowspan=3, padx=10, pady=10, sticky="nsew")
 
-        # Cambiar encabezado de la columna "Ronda" a "Iteración"
-        self.tree = ttk.Treeview(self.result_frame, columns=("Col1", "Col2", "Col3", "Col4"), show="headings")
-        self.tree.heading("Col1", text="Iteración")  # Cambiado de "Ronda" a "Iteración"
+        # Agregar columna "N°" al inicio
+        self.tree = ttk.Treeview(self.result_frame, columns=("Col0", "Col1", "Col2", "Col3", "Col4"), show="headings")
+        self.tree.heading("Col0", text="N°")  # Nueva columna para numeración
+        self.tree.heading("Col1", text="Iteración")
         self.tree.heading("Col2", text="Puntaje Total")
         self.tree.heading("Col3", text="Pinos Tirados")
         self.tree.heading("Col4", text="Probabilidad")
@@ -97,8 +98,15 @@ class BowlingSimulatorApp:
         # Contador de éxitos
         exitos = 0
 
+        # Total de iteraciones y cantidad a mostrar
+        total_iteraciones = self.iteraciones.get()
+        mostrar_ultimas = self.mostrar_iteraciones.get()
+
+        # Rango de las últimas N iteraciones
+        inicio_mostrar = max(0, total_iteraciones - mostrar_ultimas)
+
         # Simular iteraciones
-        for i in range(self.iteraciones.get()):
+        for i in range(total_iteraciones):
             puntaje_total = 0
             pinos_tirados = 0
             for _ in range(self.rondas.get()):
@@ -110,19 +118,19 @@ class BowlingSimulatorApp:
             if puntaje_total >= self.puntaje_objetivo.get():
                 exitos += 1
 
-            # Mostrar las primeras N iteraciones en la tabla
-            if i < self.mostrar_iteraciones.get():
+            # Mostrar solo las últimas N iteraciones en la tabla
+            if i >= inicio_mostrar:
                 tag = "below_target" if puntaje_total < self.puntaje_objetivo.get() else ""
                 self.tree.insert(
-                    "", "end", values=(i + 1, puntaje_total, pinos_tirados, "-"), tags=(tag,)
+                    "", "end", values=(i - inicio_mostrar + 1, i + 1, puntaje_total, pinos_tirados, "-"), tags=(tag,)
                 )
 
         # Calcular probabilidad final
-        probabilidad = (exitos / self.iteraciones.get()) * 100
+        probabilidad = (exitos / total_iteraciones) * 100
 
         # Mostrar probabilidad en la tabla
         self.tree.insert(
-            "", "end", values=("Probabilidad", "-", "-", f"{probabilidad:.2f}%")
+            "", "end", values=("", "Probabilidad", "-", "-", f"{probabilidad:.2f}%")
         )
 
     def simular_ronda(self):
