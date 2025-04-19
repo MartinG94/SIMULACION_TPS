@@ -27,6 +27,20 @@ class BowlingSimulatorApp:
         # Crear interfaz
         self.create_widgets()
 
+        # Centrar la ventana
+        self.center_window()
+
+    def center_window(self):
+        """Centrar la ventana en la pantalla."""
+        self.root.update_idletasks()
+        width = self.root.winfo_width()
+        height = self.root.winfo_height()
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        x = (screen_width - width) // 2
+        y = (screen_height - height) // 2
+        self.root.geometry(f"{width}x{height}+{x}+{y}")
+
     def create_widgets(self):
         # Sección de parámetros
         frame_params = ttk.LabelFrame(self.root, text="Parámetros")
@@ -53,101 +67,81 @@ class BowlingSimulatorApp:
         ttk.Label(frame_params, text="Hora Inicio:").grid(row=6, column=0, sticky="w")
         ttk.Entry(frame_params, textvariable=self.hora_inicio).grid(row=6, column=1)
 
-        # Botones debajo de los parámetros
-        ttk.Button(self.root, text="Iniciar Simulación", command=self.run_simulation).grid(row=1, column=0, pady=10,
-                                                                                           sticky="ew")
-        ttk.Button(self.root, text="Salir", command=self.root.destroy).grid(row=2, column=0, pady=10, sticky="ew")
+        # Botones
+        ttk.Button(self.root, text="Iniciar Simulación", command=self.run_simulation).grid(row=1, column=0, pady=10)
+        ttk.Button(self.root, text="Salir", command=self.root.destroy).grid(row=2, column=0, pady=10)
 
-        # Sección de resultados a la derecha
+        # Sección de resultados
         self.result_frame = ttk.LabelFrame(self.root, text="Resultados")
         self.result_frame.grid(row=0, column=1, rowspan=3, padx=10, pady=10, sticky="nsew")
 
-        self.canvas = tk.Canvas(self.result_frame)
-        self.scrollbar = ttk.Scrollbar(self.result_frame, orient="vertical", command=self.canvas.yview)
-        self.scrollable_frame = ttk.Frame(self.canvas)
+        self.tree = ttk.Treeview(self.result_frame, columns=("Col1", "Col2", "Col3", "Col4"), show="headings")
+        self.tree.heading("Col1", text="Ronda")
+        self.tree.heading("Col2", text="Puntaje Total")
+        self.tree.heading("Col3", text="Pinos Tirados")
+        self.tree.heading("Col4", text="Probabilidad")
+        self.tree.pack(fill="both", expand=True)
 
-        self.scrollable_frame.bind(
-            "<Configure>",
-            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-        )
-
-        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-        # Vincular el evento de la rueda del mouse al Canvas
-        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
-
-        self.canvas.pack(side="left", fill="both", expand=True)
-        self.scrollbar.pack(side="right", fill="y")
-
-    def _on_mousewheel(self, event):
-        # Desplazar el Canvas con la rueda del mouse
-        self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
+        # Estilo para colorear filas
+        style = ttk.Style()
+        style.configure("Treeview", rowheight=25)
+        style.map("Treeview", background=[("selected", "blue")], foreground=[("selected", "white")])
+        self.tree.tag_configure("below_target", background="red", foreground="white")
 
     def run_simulation(self):
-        # Lógica de simulación
-        resultados = self.simular_bowling()
-
-        # Contar iteraciones que superan el puntaje objetivo
-        iteraciones_exitosas = sum(1 for resultado in resultados if resultado > self.puntaje_objetivo.get())
-        probabilidad = (iteraciones_exitosas / self.mostrar_iteraciones.get()) * 100
-
         # Limpiar resultados previos
-        for widget in self.scrollable_frame.winfo_children():
-            widget.destroy()
+        for row in self.tree.get_children():
+            self.tree.delete(row)
 
-        # Mostrar solo las últimas N iteraciones
-        n = self.iteraciones.get()  # Número de iteraciones definido por el usuario
-        ultimos_resultados = resultados[-n:]
+        # Contador de éxitos
+        exitos = 0
 
-        ttk.Label(self.scrollable_frame, text="Resultados de la Simulación:").grid(row=0, column=0, sticky="w")
-        for i, resultado in enumerate(resultados):
-            color = "red" if resultado < self.puntaje_objetivo.get() else "black"
-            ttk.Label(self.scrollable_frame, text=f"Iteración {i + 1}: {resultado}", foreground=color).grid(row=i + 1,column=0,sticky="w")
-
-        # Mostrar probabilidad
-        ttk.Label(self.scrollable_frame, text=f"Probabilidad de superar el puntaje objetivo: {probabilidad:.2f}%",foreground="blue").grid(row=len(resultados) + 1, column=0, sticky="w")
-
-    def simular_bowling(self):
-        # Implementar la lógica de simulación aquí
-        resultados = []
-        for _ in range(self.mostrar_iteraciones.get()):
+        # Simular iteraciones
+        for i in range(self.iteraciones.get()):
             puntaje_total = 0
+            pinos_tirados = 0
             for _ in range(self.rondas.get()):
-                puntaje_total += self.simular_ronda()
-            resultados.append(puntaje_total)
-        return resultados
+                puntaje_ronda, pinos = self.simular_ronda()
+                puntaje_total += puntaje_ronda
+                pinos_tirados += pinos
+
+            # Verificar si se supera el puntaje objetivo
+            if puntaje_total >= self.puntaje_objetivo.get():
+                exitos += 1
+
+            # Mostrar las primeras N iteraciones en la tabla
+            if i < self.mostrar_iteraciones.get():
+                tag = "below_target" if puntaje_total < self.puntaje_objetivo.get() else ""
+                self.tree.insert(
+                    "", "end", values=(i + 1, puntaje_total, pinos_tirados, "-"), tags=(tag,)
+                )
+
+        # Calcular probabilidad final
+        probabilidad = (exitos / self.iteraciones.get()) * 100
+
+        # Mostrar probabilidad en la tabla
+        self.tree.insert(
+            "", "end", values=("Probabilidad", "-", "-", f"{probabilidad:.2f}%")
+        )
 
     def simular_ronda(self):
         # Simular una ronda de bowling
         primera_bola = random.choices([6, 7, 8, 9, 10], weights=self.probabilidades_primera_bola, k=1)[0]
         if primera_bola == 10:
-            return self.puntaje_strike.get()
+            return self.puntaje_strike.get(), 10
 
         segunda_bola = random.choices(
-            range(len(self.probabilidades_segunda_bola[primera_bola])),
+            range(11 - primera_bola),  # Ajustar para que las probabilidades sean coherentes
             weights=self.probabilidades_segunda_bola[primera_bola],
             k=1
         )[0]
         total_pinos = primera_bola + segunda_bola
         if total_pinos == 10:
-            return self.puntaje_spare.get()
-        return total_pinos
+            return self.puntaje_spare.get(), total_pinos
+        return total_pinos, total_pinos
 
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = BowlingSimulatorApp(root)
-
-    # Centrar la ventana en la pantalla
-    root.update_idletasks()  # Asegurarse de que la geometría esté actualizada
-    ancho_ventana = root.winfo_width()
-    alto_ventana = root.winfo_height()
-    ancho_pantalla = root.winfo_screenwidth()
-    alto_pantalla = root.winfo_screenheight()
-
-    pos_x = (ancho_pantalla // 2) - (ancho_ventana // 2)
-    pos_y = (alto_pantalla // 2) - (alto_ventana // 2)
-    root.geometry(f"+{pos_x}+{pos_y}")
-
     root.mainloop()
