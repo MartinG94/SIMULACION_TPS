@@ -219,6 +219,68 @@ def abrir_configuracion():
     tk.Button(ventana_config, text="Guardar", command=guardar_config, bg="#4CAF50", fg="white").pack(pady=5)
     tk.Button(ventana_config, text="Cancelar", command=ventana_config.destroy, bg="#f44336", fg="white").pack(pady=5)
 
+def mostrar_parametros():
+    """Muestra los parámetros actuales de la simulación en una ventana"""
+    ventana_params = tk.Toplevel()
+    ventana_params.title("Parámetros Actuales")
+    ventana_params.geometry("600x500")
+    
+    # Hacer que la ventana sea modal
+    ventana_params.transient(ventana)
+    ventana_params.grab_set()
+    
+    # Añadir un frame con scroll
+    main_frame = tk.Frame(ventana_params)
+    main_frame.pack(fill=tk.BOTH, expand=True)
+    
+    canvas = tk.Canvas(main_frame)
+    scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+    scrollable_frame = tk.Frame(canvas)
+    
+    scrollable_frame.bind(
+        "<Configure>",
+        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+    )
+    
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scrollbar.set)
+    
+    canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+    
+    # Parámetros generales
+    tk.Label(scrollable_frame, text="Parámetros de simulación", font=("Arial", 12, "bold")).pack(pady=5)
+    tk.Label(scrollable_frame, text=f"N (partidas): {entry_n.get()}").pack(anchor="w", padx=10)
+    tk.Label(scrollable_frame, text=f"Umbral: {entry_umbral.get()}").pack(anchor="w", padx=10)
+    tk.Label(scrollable_frame, text=f"Rondas por partida: {parametros['rondas']}").pack(anchor="w", padx=10)
+    
+    # Parámetros de puntuación
+    tk.Label(scrollable_frame, text="\nPuntuación", font=("Arial", 12, "bold")).pack(pady=5)
+    tk.Label(scrollable_frame, text=f"Strike: {parametros['puntos']['strike']} puntos").pack(anchor="w", padx=10)
+    tk.Label(scrollable_frame, text=f"Spare: {parametros['puntos']['spare']} puntos").pack(anchor="w", padx=10)
+    tk.Label(scrollable_frame, text=f"Normal: {parametros['puntos']['normal']}").pack(anchor="w", padx=10)
+    
+    # Probabilidades primera bola
+    tk.Label(scrollable_frame, text="\nProbabilidades primera bola", font=("Arial", 12, "bold")).pack(pady=5)
+    primera_frame = tk.Frame(scrollable_frame)
+    primera_frame.pack(fill="x", padx=10)
+    
+    for i, (valor, prob) in enumerate(parametros["primera_bola"].items()):
+        tk.Label(primera_frame, text=f"{valor}: {prob}%").grid(row=0, column=i, padx=5)
+    
+    # Probabilidades segunda bola
+    tk.Label(scrollable_frame, text="\nProbabilidades segunda bola", font=("Arial", 12, "bold")).pack(pady=5)
+    
+    for primero in parametros["segunda_bola"]:
+        tk.Label(scrollable_frame, text=f"Después de una primera bola de {primero}:", font=("Arial", 10, "italic")).pack(anchor="w", padx=10)
+        seg_frame = tk.Frame(scrollable_frame)
+        seg_frame.pack(fill="x", padx=20)
+        
+        for i, (valor, prob) in enumerate(parametros["segunda_bola"][primero].items()):
+            tk.Label(seg_frame, text=f"{valor}: {prob}%").grid(row=0, column=i, padx=5)
+    
+    tk.Button(scrollable_frame, text="Cerrar", command=ventana_params.destroy, bg="#f44336", fg="white").pack(pady=10)
+
 def simular():
     global resultado_df_completo, resultado_df_mostrado
     
@@ -293,11 +355,52 @@ def simular():
         # Actualizar estado
         status_bar.config(text=f"Simulación completada. {N} iteraciones. Probabilidad: {probabilidad:.4f}")
         
-        messagebox.showinfo("Resultado", f"Probabilidad de superar {umbral} puntos: {probabilidad:.4f} ({supera_umbral}/{N})")
+        # Mostrar ventana de resultados con parámetros
+        mostrar_resultado_con_parametros(probabilidad, supera_umbral, N, umbral)
 
     except Exception as e:
         status_bar.config(text="Error en la simulación.")
         messagebox.showerror("Error", str(e))
+
+def mostrar_resultado_con_parametros(probabilidad, supera_umbral, N, umbral):
+    """Muestra el resultado de la simulación junto con los parámetros utilizados"""
+    ventana_result = tk.Toplevel()
+    ventana_result.title("Resultado de Simulación")
+    ventana_result.geometry("600x400")
+    
+    # Hacer que la ventana sea modal
+    ventana_result.transient(ventana)
+    ventana_result.grab_set()
+    
+    # Frame para el resultado
+    result_frame = tk.Frame(ventana_result)
+    result_frame.pack(fill="x", pady=10)
+    
+    tk.Label(result_frame, text=f"Probabilidad de superar {umbral} puntos:", font=("Arial", 11)).pack(side="left", padx=5)
+    tk.Label(result_frame, text=f"{probabilidad:.4f} ({supera_umbral}/{N})", font=("Arial", 11, "bold")).pack(side="left")
+    
+    # Frame para los parámetros resumidos
+    param_frame = tk.Frame(ventana_result)
+    param_frame.pack(fill="both", expand=True, padx=10, pady=10)
+    
+    tk.Label(param_frame, text="Parámetros utilizados:", font=("Arial", 12, "bold")).pack(anchor="w", pady=5)
+    
+    # Parámetros principales
+    tk.Label(param_frame, text=f"• N (partidas): {N}").pack(anchor="w", pady=2)
+    tk.Label(param_frame, text=f"• Umbral: {umbral}").pack(anchor="w", pady=2)
+    tk.Label(param_frame, text=f"• Rondas por partida: {parametros['rondas']}").pack(anchor="w", pady=2)
+    tk.Label(param_frame, text=f"• Puntos Strike: {parametros['puntos']['strike']}").pack(anchor="w", pady=2)
+    tk.Label(param_frame, text=f"• Puntos Spare: {parametros['puntos']['spare']}").pack(anchor="w", pady=2)
+    tk.Label(param_frame, text=f"• Puntos Normal: {parametros['puntos']['normal']}").pack(anchor="w", pady=2)
+    
+    # Botones
+    btn_frame = tk.Frame(ventana_result)
+    btn_frame.pack(pady=10)
+    
+    tk.Button(btn_frame, text="Ver todos los parámetros", command=mostrar_parametros, 
+              bg="#2196F3", fg="white").pack(side="left", padx=5)
+    tk.Button(btn_frame, text="Cerrar", command=ventana_result.destroy, 
+              bg="#f44336", fg="white").pack(side="left", padx=5)
 
 def exportar_excel():
     global resultado_df_completo
@@ -317,6 +420,28 @@ def exportar_excel():
             supera_umbral = sum(resultado_df_completo['Supera umbral'])
             probabilidad = supera_umbral / N if N > 0 else 0
             
+            # Crear un DataFrame para los parámetros
+            param_data = [
+                {"Parámetro": "N (partidas)", "Valor": N},
+                {"Parámetro": "Umbral", "Valor": umbral},
+                {"Parámetro": "Rondas por partida", "Valor": parametros["rondas"]},
+                {"Parámetro": "Puntos Strike", "Valor": parametros["puntos"]["strike"]},
+                {"Parámetro": "Puntos Spare", "Valor": parametros["puntos"]["spare"]},
+                {"Parámetro": "Puntos Normal", "Valor": parametros["puntos"]["normal"]},
+            ]
+            
+            # Agregar probabilidades de primera bola
+            for val, prob in parametros["primera_bola"].items():
+                param_data.append({"Parámetro": f"Prob. primera bola {val}", "Valor": prob})
+            
+            # Agregar probabilidades de segunda bola
+            for primero in parametros["segunda_bola"]:
+                for seg, prob in parametros["segunda_bola"][primero].items():
+                    param_data.append({"Parámetro": f"Prob. segunda bola {seg} después de {primero}", "Valor": prob})
+            
+            # Crear DataFrame de parámetros
+            df_params = pd.DataFrame(param_data)
+            
             # Agregar un resumen al final
             df_resumen = pd.DataFrame([
                 {"Iteración": "", "Puntaje": "", "Supera umbral": ""},
@@ -327,8 +452,10 @@ def exportar_excel():
             # Concatenar el DataFrame original con el resumen
             resultado_final = pd.concat([resultado_df_completo, df_resumen], ignore_index=True)
             
-            # Exportar a Excel
-            resultado_final.to_excel(archivo, index=False)
+            # Crear un Excel con múltiples hojas
+            with pd.ExcelWriter(archivo) as writer:
+                resultado_final.to_excel(writer, sheet_name="Simulación", index=False)
+                df_params.to_excel(writer, sheet_name="Parámetros", index=False)
             
             status_bar.config(text=f"Archivo exportado exitosamente: {archivo}")
             messagebox.showinfo("Exportado", f"Archivo guardado en: {archivo}")
@@ -396,6 +523,9 @@ btn_simular.pack(side=tk.LEFT, padx=5)
 
 btn_exportar = tk.Button(button_frame, text="📁 Exportar a Excel", command=exportar_excel, bg="#2196F3", fg="white")
 btn_exportar.pack(side=tk.LEFT, padx=5)
+
+btn_ver_parametros = tk.Button(button_frame, text="👁 Ver parámetros", command=mostrar_parametros, bg="#9C27B0", fg="white")
+btn_ver_parametros.pack(side=tk.LEFT, padx=5)
 
 # Etiqueta para mostrar iteración actual
 lbl_iteracion = tk.Label(main_frame, text="Iteración actual: -", font=("Arial", 10, "bold"))
