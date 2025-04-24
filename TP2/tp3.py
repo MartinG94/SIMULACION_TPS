@@ -26,7 +26,6 @@ class BowlingSimulatorApp:
         self.puntaje_objetivo = tk.IntVar(value=120)
         self.iteraciones = tk.IntVar(value=100000)
         self.mostrar_iteraciones = tk.IntVar(value=10)
-        self.hora_inicio = tk.IntVar(value=1)
 
         # Crear interfaz
         self.create_widgets()
@@ -67,9 +66,6 @@ class BowlingSimulatorApp:
 
         ttk.Label(frame_params, text="Mostrar Iteraciones:").grid(row=5, column=0, sticky="w")
         ttk.Entry(frame_params, textvariable=self.mostrar_iteraciones).grid(row=5, column=1)
-
-        ttk.Label(frame_params, text="Hora Inicio:").grid(row=6, column=0, sticky="w")
-        ttk.Entry(frame_params, textvariable=self.hora_inicio).grid(row=6, column=1)
 
         # Botones
         ttk.Button(self.root, text="Iniciar Simulación", command=self.run_simulation).grid(row=1, column=0, pady=10)
