@@ -75,6 +75,9 @@ class BowlingSimulatorApp:
         # Sección de resultados
         self.result_frame = ttk.LabelFrame(self.root, text="Resultados")
         self.result_frame.grid(row=0, column=1, rowspan=3, padx=10, pady=10, sticky="nsew")
+        self.root.grid_columnconfigure(1, weight=1)
+        self.root.grid_rowconfigure(0, weight=1)
+
 
         # Agregar columna "N°" al inicio
         self.tree = ttk.Treeview(self.result_frame, columns=("Col0", "Col1", "Col2", "Col3", "Col4"), show="headings",
@@ -86,11 +89,21 @@ class BowlingSimulatorApp:
         self.tree.heading("Col4", text="Probabilidad")
         self.tree.pack(fill="both", expand=True)
 
+        # Mostrar la última iteración real fija (fuera de la tabla)
+        self.fixed_last_row = ttk.LabelFrame(self.result_frame, text="Última Iteración Real (Fija)")
+        self.fixed_last_row.pack(fill="x", pady=(10, 0))
+
+        self.fixed_last_row_label = ttk.Label(self.fixed_last_row, text="Aún no se ha simulado.")
+        self.fixed_last_row_label.pack(anchor="w", padx=5, pady=5)
+
+
         # Estilo para colorear filas
         style = ttk.Style()
         style.configure("Treeview", rowheight=25)
         style.map("Treeview", background=[("selected", "blue")], foreground=[("selected", "white")])
         self.tree.tag_configure("below_target", background="red", foreground="white")
+        self.tree.tag_configure("ultima_iteracion", background="lightyellow", foreground="black")
+
 
     def export_to_excel(self):
         # Obtener todos los datos de la grilla
@@ -121,6 +134,9 @@ class BowlingSimulatorApp:
         # Rango de las últimas N iteraciones
         inicio_mostrar = max(0, total_iteraciones - mostrar_ultimas)
 
+        ultima_iteracion_real = None  # Para guardar los datos de la última iteración
+
+
         # Simular iteraciones
         for i in range(total_iteraciones):
             puntaje_total = 0
@@ -133,6 +149,11 @@ class BowlingSimulatorApp:
             # Verificar si se supera el puntaje objetivo
             if puntaje_total >= self.puntaje_objetivo.get():
                 exitos += 1
+
+            # Guardar la última iteración real
+            if i == total_iteraciones - 1:
+                ultima_iteracion_real = (i + 1, puntaje_total, pinos_tirados)
+
 
             # Mostrar solo las últimas N iteraciones en la tabla
             if i >= inicio_mostrar:
@@ -148,6 +169,13 @@ class BowlingSimulatorApp:
         self.tree.insert(
             "", "end", values=("", "Probabilidad", "-", "-", f"{probabilidad:.2f}%")
         )
+
+        # Mostrar la última iteración real fija en el recuadro de abajo
+        if ultima_iteracion_real:
+            iter_num, puntaje, pinos = ultima_iteracion_real
+            texto_fila = f"Iteración {iter_num}  |  Puntaje Total: {puntaje}  |  Pinos Tirados: {pinos}"
+            self.fixed_last_row_label.config(text=texto_fila)
+
 
     def simular_ronda(self):
         # Simular una ronda de bowling
