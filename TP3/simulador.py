@@ -19,16 +19,16 @@ class SimuladorBowling:
     def simular(self, iteraciones, objetivo):
         tabla = []
         contador_supera = 0
-
         for i in range(1, iteraciones + 1):
             total_puntos = 0
             detalle = []
-
-            for _ in range(self.rondas):
+            supero_esta_iteracion = False
+            supero_en_ronda = None  # Almacena en qué ronda se superó el objetivo
+            for ronda in range(1, self.rondas + 1):
                 pinos1, rnd1 = self.obtener_pinos(self.probs_tiro1)
                 if pinos1 == 10:
                     total_puntos += self.puntos['strike']
-                    rnd1 = round(rnd1,4)
+                    rnd1 = round(rnd1, 4)
                     detalle.append((rnd1, pinos1, '-', '-', self.puntos['strike'], total_puntos))
                 else:
                     segunda_distrib = self.probs_tiro2.get(pinos1, [])
@@ -39,22 +39,36 @@ class SimuladorBowling:
                     else:
                         puntos = total
                     total_puntos += puntos
-                    rnd1 = round(rnd1,4)
-                    rnd2 = round(rnd2,4)
+                    rnd1 = round(rnd1, 4)
+                    rnd2 = round(rnd2, 4)
                     detalle.append((rnd1, pinos1, rnd2, pinos2, puntos, total_puntos))
 
-            # Verificar si supera el objetivo y actualizar contador
-            if total_puntos > objetivo:
-                contador_supera += 1
+                # Verificar si supera el objetivo justo en esta ronda
+                if total_puntos > objetivo and not supero_esta_iteracion:
+                    supero_esta_iteracion = True
+                    supero_en_ronda = ronda  # Guardar la ronda donde se superó
+                    contador_supera += 1
+
+            # Ajustar el contador según las condiciones
+            for ronda in range(1, self.rondas + 1):
+                if supero_en_ronda:
+                    if ronda < supero_en_ronda:
+                        detalle[ronda - 1] = detalle[ronda - 1] + (contador_supera - 1,)
+                    else:
+                        detalle[ronda - 1] = detalle[ronda - 1] + (contador_supera,)
+                else:
+                    detalle[ronda - 1] = detalle[ronda - 1] + (contador_supera,)
 
             tabla.append({
                 'iteracion': i,
                 'puntos_totales': total_puntos,
                 'detalle': detalle,
-                'supera_objetivo': contador_supera  # Contador acumulado
+                'supera_objetivo': supero_esta_iteracion,
+                'supero_en_ronda': supero_en_ronda,  # Nueva propiedad
+                'contador_acumulado': contador_supera
             })
-
         return tabla
+
         
     def obtener_probabilidad(self, tabla, iteraciones):
         """
@@ -64,7 +78,7 @@ class SimuladorBowling:
         if not tabla or iteraciones <= 0:
             return 0
             
-        # El último registro tiene el contador final de éxitos
-        exitos = tabla[-1]['supera_objetivo']
+        # Contar las iteraciones que superan el objetivo
+        exitos = sum(1 for fila in tabla if fila['supera_objetivo'])
         probabilidad = (exitos / iteraciones) * 100
         return probabilidad

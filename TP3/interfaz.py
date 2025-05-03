@@ -132,18 +132,16 @@ class BowlingApp:
             cantidad = int(self.entries["Cantidad a Mostrar"].get())
             objetivo = int(self.entries["Objetivo de Puntos"].get())
             hasta = desde + cantidad - 1
-
             if desde < 1 or cantidad < 1:
                 raise ValueError("Los valores deben ser mayores a 0.")
             if desde > iteraciones:
                 raise ValueError(f"Desde Iteración ({desde}) supera el total ({iteraciones}).")
             if hasta > iteraciones:
                 hasta = iteraciones
-
             config = self.parametros_config
             sim = SimuladorBowling(config["probs_tiro1"], config["probs_tiro2"], config["puntos"], rondas)
             self.resultados = sim.simular(iteraciones, objetivo)
-            
+
             # Guardar parámetros actuales
             self.parametros_actuales = {
                 "rondas": rondas,
@@ -151,33 +149,65 @@ class BowlingApp:
                 "objetivo": objetivo,
                 "config": config
             }
-
+            # Mostrar el rango de iteraciones solicitado
             for fila in self.resultados[desde-1:hasta]:
-                for nro_ronda, (rnd1, p1, rnd2, p2, pts, acumulado) in enumerate(fila["detalle"], start=1):
+                for nro_ronda, (rnd1, p1, rnd2, p2, pts, acumulado, contador) in enumerate(fila["detalle"], start=1):
                     self.tree.insert("", "end", values=(
-                        fila["iteracion"], nro_ronda,
+                        fila["iteracion"],
+                        nro_ronda,
                         round(rnd1, 4) if isinstance(rnd1, float) else rnd1,
                         p1,
                         round(rnd2, 4) if isinstance(rnd2, float) else '',
                         p2 if p2 != '-' else '',
-                        pts, acumulado, fila["supera_objetivo"]
+                        pts, 
+                        acumulado, 
+                        contador
                     ))
-            
+
+            # Mostrar siempre la última iteración
+            ultima_fila = self.resultados[-1]
+            ultima_iter_id = None
+
+            # Agregar un separador visual si necesario
+            if hasta < iteraciones - 1:
+                separador_id = self.tree.insert("", "end", values=("...", "...", "...", "...", "...", "...", "...", "...", "..."))
+
+            # Añadir la última iteración solo si no está ya incluida
+            if ultima_fila["iteracion"] > hasta:
+                for nro_ronda, (rnd1, p1, rnd2, p2, pts, acumulado, contador) in enumerate(ultima_fila["detalle"], start=1):
+                    ultima_iter_id = self.tree.insert("", "end", values=(
+                        ultima_fila["iteracion"], 
+                        nro_ronda,
+                        round(rnd1, 4) if isinstance(rnd1, float) else rnd1,
+                        p1,
+                        round(rnd2, 4) if isinstance(rnd2, float) else '',
+                        p2 if p2 != '-' else '',
+                        pts, 
+                        acumulado, 
+                        contador
+                    ))
+
+            # Asegurar que la última iteración sea visible
+            if ultima_iter_id:
+                self.tree.see(ultima_iter_id)
+
             # Calcular y mostrar la probabilidad
             self._actualizar_resultados_estadisticos(objetivo, rondas, iteraciones)
-            
+
             # Mostrar parámetros
             self._mostrar_parametros()
-            
+
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
+            
+
     def _actualizar_resultados_estadisticos(self, objetivo, rondas, iteraciones):
-        # Obtener el último contador
+        # Calcular la probabilidad correctamente
         if self.resultados:
-            ultimas_stats = self.resultados[-1]
-            cantidad_superan = ultimas_stats["supera_objetivo"]
-            probabilidad = (cantidad_superan / iteraciones) * 100
+            # Contar las iteraciones que superan el objetivo
+            exitos = sum(1 for fila in self.resultados if fila['supera_objetivo'])
+            probabilidad = (exitos / iteraciones) * 100
             
             # Actualizar etiquetas con los resultados
             self.lbl_probabilidad.config(
@@ -185,7 +215,7 @@ class BowlingApp:
             )
             
             self.lbl_detalles.config(
-                text=f"De {iteraciones} simulaciones, {cantidad_superan} superaron el objetivo."
+                text=f"De {iteraciones} simulaciones, {exitos} superaron el objetivo."
             )
         else:
             self.lbl_probabilidad.config(text="No hay datos de simulación disponibles.")
