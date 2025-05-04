@@ -88,6 +88,17 @@ class BowlingApp:
         
         self.tree.pack(fill="both", expand=True)
 
+        #Fila fija debajo de la tabla
+        self.fila_n_frame = ttk.LabelFrame(frame_tabla, text="Última fila simulada (N)")
+        self.fila_n_frame.pack(fill="x", padx=5, pady=5)
+
+        self.labels_fila_n = []
+        for col in self.tree["columns"]:
+            lbl = ttk.Label(self.fila_n_frame, text=f"{col}: -", width=10)
+            lbl.pack(side="left", padx=2, pady=2)
+            self.labels_fila_n.append(lbl)
+
+
     def _crear_panel_resultados(self):
         self.resultados_frame = ttk.LabelFrame(self.panel_principal, text="Resultados Estadísticos")
         self.panel_principal.add(self.resultados_frame, weight=60)  
@@ -190,6 +201,25 @@ class BowlingApp:
             # Asegurar que la última iteración sea visible
             if ultima_iter_id:
                 self.tree.see(ultima_iter_id)
+
+            #Fila fija con última fila simulada
+            ultima_ronda = ultima_fila["detalle"][-1]  # última ronda
+            valores_ultima = (
+                ultima_fila["iteracion"],
+                len(ultima_fila["detalle"]),
+                round(ultima_ronda[0], 4) if isinstance(ultima_ronda[0], float) else ultima_ronda[0],
+                ultima_ronda[1],
+                round(ultima_ronda[2], 4) if isinstance(ultima_ronda[2], float) else '',
+                ultima_ronda[3] if ultima_ronda[3] != '-' else '',
+                ultima_ronda[4],
+                ultima_ronda[5],
+                ultima_ronda[6]
+            )
+
+            for i, val in enumerate(valores_ultima):
+                self.labels_fila_n[i].config(text=f"{self.tree['columns'][i]}: {val}")
+
+
 
             # Calcular y mostrar la probabilidad
             self._actualizar_resultados_estadisticos(objetivo, rondas, iteraciones)
